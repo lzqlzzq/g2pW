@@ -68,7 +68,7 @@ class G2PWConverter:
         sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
         sess_options.intra_op_num_threads = 2
         self.session_g2pw =  onnxruntime.InferenceSession(os.path.join(model_dir, 'g2pw.onnx'), sess_options=sess_options)
-        
+
         self.config = load_config(os.path.join(model_dir, 'config.py'), use_default=True)
 
         self.num_workers = num_workers if num_workers else self.config.num_workers
@@ -80,30 +80,30 @@ class G2PWConverter:
 
         polyphonic_chars_path = os.path.join(model_dir, 'POLYPHONIC_CHARS.txt')
         monophonic_chars_path = os.path.join(model_dir, 'MONOPHONIC_CHARS.txt')
-        self.polyphonic_chars = [line.split('\t') for line in open(polyphonic_chars_path, 'r', encoding='utf-8').read().strip().split('\n')]
-        self.monophonic_chars = [line.split('\t') for line in open(monophonic_chars_path, 'r', encoding='utf-8').read().strip().split('\n')]
+        self.polyphonic_chars = [line.split('\t') for line in open(polyphonic_chars_path, encoding='utf8', errors='ignore').read().strip().split('\n')]
+        self.monophonic_chars = [line.split('\t') for line in open(monophonic_chars_path, encoding='utf8', errors='ignore').read().strip().split('\n')]
         self.labels, self.char2phonemes = get_char_phoneme_labels(self.polyphonic_chars) if self.config.use_char_phoneme else get_phoneme_labels(self.polyphonic_chars)
 
         self.chars = sorted(list(self.char2phonemes.keys()))
         self.pos_tags = TextDataset.POS_TAGS
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               'bopomofo_to_pinyin_wo_tune_dict.json'), 'r', encoding='utf-8') as fr:
-            self.bopomofo_convert_dict = json.load(fr)
+                               'bopomofo_to_pinyin_wo_tune_dict.json'), 'r', encoding='utf8', errors='ignore') as fr:
+            self.bopomofo_convert_dict = json.loads(fr.read())
         self.style_convert_func = {
             'bopomofo': lambda x: x,
             'pinyin': self._convert_bopomofo_to_pinyin,
         }[style]
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               'char_bopomofo_dict.json'), 'r', encoding='utf-8') as fr:
-            self.char_bopomofo_dict = json.load(fr)
+                               'char_bopomofo_dict.json'), 'r', encoding='utf8', errors='ignore') as fr:
+            self.char_bopomofo_dict = json.loads(fr.read())
 
         self.enable_non_tradional_chinese = enable_non_tradional_chinese
         if self.enable_non_tradional_chinese:
             self.s2t_dict = {}
             for line in open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                    'bert-base-chinese_s2t_dict.txt'), 'r', encoding='utf-8').read().strip().split('\n'):
+                    'bert-base-chinese_s2t_dict.txt'), 'r', encoding='utf8', errors='ignore').read().strip().split('\n'):
                 s_char, t_char = line.split('\t')
                 self.s2t_dict[s_char] = t_char
 
